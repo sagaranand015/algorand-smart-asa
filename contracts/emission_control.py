@@ -133,10 +133,28 @@ class EmissionControl(Application):
                     TxnField.fee: Int(0),
                     TxnField.type_enum: TxnType.AssetTransfer,
                     TxnField.xfer_asset: asset_id,
-                    TxnField.asset_amount: Int(1),
+                    TxnField.asset_amount: Int(0),
                     TxnField.sender: Global.current_application_address(),
                     # TxnField.asset_sender: Global.current_application_address(),
                     TxnField.asset_receiver: Global.current_application_address(),
+                }
+            ),
+            InnerTxnBuilder.Submit(),
+        )
+
+    @internal(TealType.none)
+    def opt_into_asset_for_business(self, business_address: Expr, asset_id: Expr):
+        return Seq(
+            InnerTxnBuilder.Begin(),
+            InnerTxnBuilder.SetFields(
+                {
+                    TxnField.fee: Int(0),
+                    TxnField.type_enum: TxnType.AssetTransfer,
+                    TxnField.xfer_asset: asset_id,
+                    TxnField.asset_amount: Int(0),
+                    TxnField.sender: business_address,
+                    # TxnField.asset_sender: Global.current_application_address(),
+                    TxnField.asset_receiver: business_address,
                 }
             ),
             InnerTxnBuilder.Submit(),
@@ -190,6 +208,24 @@ class EmissionControl(Application):
         """
         return Seq(
             self.transfer_compliance_nft_to_business(
+                business_address.get(), asset_id.get()
+            ),
+            output.set(asset_id),
+        )
+
+    @external
+    def business_opt_into_asset(
+            self,
+            business_address: abi.Address,
+            asset_id: abi.Uint64,
+            *,
+            output: abi.Uint64,
+    ):
+        """
+        Business Account opting into the Compliance NFT
+        """
+        return Seq(
+            self.opt_into_asset_for_business(
                 business_address.get(), asset_id.get()
             ),
             output.set(asset_id),

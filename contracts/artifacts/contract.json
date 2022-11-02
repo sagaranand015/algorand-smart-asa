@@ -71,6 +71,23 @@
                 "type": "uint64"
             },
             "desc": "Creates the compliance NFT for the business via the Algorand SC"
+        },
+        {
+            "name": "business_opt_into_asset",
+            "args": [
+                {
+                    "type": "address",
+                    "name": "business_address"
+                },
+                {
+                    "type": "uint64",
+                    "name": "asset_id"
+                }
+            ],
+            "returns": {
+                "type": "uint64"
+            },
+            "desc": "Business Account opting into the Compliance NFT"
         }
     ],
     "networks": {},
