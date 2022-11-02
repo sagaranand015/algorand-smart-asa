@@ -38,3 +38,20 @@ This repo consists of the following artifacts that would then become the corners
     3. Transferring Compliance NFTs to eligible businesses
     4. Reporting data on Compliance NFTs holders 
 
+## Setup
+This implementation is written in python using the Algorand Python SDK and the pyteal-beaker framework for Smart Contracts. To setup the environment, please follow the steps below:
+1. Make sure python3.10+ is installed on your development machine and that you've cloned the repo 
+2. Run the following commands to setup the virtual environment and the app:
+```
+cd arc-20-smart-asa
+python3 --version -> make sure this is python 3.10+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 emission_control_client.py
+```
+3. Run through the command line demo app to interact with the emission control App deployed on the algorand blockchain
+
+## Demo
+Please find the demo here: <demo_video>
+

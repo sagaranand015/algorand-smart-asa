@@ -1,5 +1,4 @@
 from typing import Final
-from .constants import COMPLIANCE_NFT_BASE_URL
 
 from pyteal import *
 from beaker import *
@@ -11,7 +10,7 @@ class EmissionRuleResult(abi.NamedTuple):
     min: abi.Field[abi.Uint64]
 
 
-COMPLIANCE_ASA_APP_BINDING = COMPLIANCE_NFT_BASE_URL
+COMPLIANCE_ASA_APP_BINDING = "https://compliance.app/"
 
 UNDERLYING_COMPLIANCE_NFT_DECIMALS = Int(0)
 UNDERLYING_COMPLIANCE_NFT_DEFAULT_FROZEN = Int(0)
