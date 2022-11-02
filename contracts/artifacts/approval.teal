@@ -1,0 +1,388 @@
+#pragma version 7
+intcblock 0 1 4
+bytecblock 0x151f7c75 0x656d697373696f6e5f706172616d65746572 0x656d697373696f6e5f6d6178 0x656d697373696f6e5f6d696e 0x00 0x
+txn NumAppArgs
+intc_0 // 0
+==
+bnz main_l12
+txna ApplicationArgs 0
+pushbytes 0x74b9038d // "get_emission_rule()(string,uint64,uint64)"
+==
+bnz main_l11
+txna ApplicationArgs 0
+pushbytes 0x0ef9e652 // "set_emission_rule(string,uint64,uint64)bool"
+==
+bnz main_l10
+txna ApplicationArgs 0
+pushbytes 0x17944db6 // "is_business_compliant(string,uint64)bool"
+==
+bnz main_l9
+txna ApplicationArgs 0
+pushbytes 0x9f985fc4 // "create_compliance_nft()uint64"
+==
+bnz main_l8
+txna ApplicationArgs 0
+pushbytes 0xb60cb494 // "allocate_compliance_nft_to_business(address,uint64)uint64"
+==
+bnz main_l7
+err
+main_l7:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+store 20
+txna ApplicationArgs 2
+btoi
+store 21
+load 20
+load 21
+callsub allocatecompliancenfttobusiness_11
+store 22
+bytec_0 // 0x151f7c75
+load 22
+itob
+concat
+log
+intc_1 // 1
+return
+main_l8:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+callsub createcompliancenft_10
+store 18
+bytec_0 // 0x151f7c75
+load 18
+itob
+concat
+log
+intc_1 // 1
+return
+main_l9:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+store 12
+txna ApplicationArgs 2
+btoi
+store 13
+load 12
+load 13
+callsub isbusinesscompliant_6
+store 14
+bytec_0 // 0x151f7c75
+bytec 4 // 0x00
+intc_0 // 0
+load 14
+setbit
+concat
+log
+intc_1 // 1
+return
+main_l10:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+store 5
+txna ApplicationArgs 2
+btoi
+store 6
+txna ApplicationArgs 3
+btoi
+store 7
+load 5
+load 6
+load 7
+callsub setemissionrule_5
+store 8
+bytec_0 // 0x151f7c75
+bytec 4 // 0x00
+intc_0 // 0
+load 8
+setbit
+concat
+log
+intc_1 // 1
+return
+main_l11:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+callsub getemissionrule_4
+store 0
+bytec_0 // 0x151f7c75
+load 0
+concat
+log
+intc_1 // 1
+return
+main_l12:
+txn OnCompletion
+intc_0 // NoOp
+==
+bnz main_l18
+txn OnCompletion
+intc_1 // OptIn
+==
+bnz main_l17
+txn OnCompletion
+intc_2 // UpdateApplication
+==
+bnz main_l16
+err
+main_l16:
+txn ApplicationID
+intc_0 // 0
+!=
+assert
+callsub update_2
+intc_1 // 1
+return
+main_l17:
+txn ApplicationID
+intc_0 // 0
+!=
+assert
+callsub optin_3
+intc_1 // 1
+return
+main_l18:
+txn ApplicationID
+intc_0 // 0
+==
+assert
+callsub create_0
+intc_1 // 1
+return
+
+// create
+create_0:
+pushbytes 0x726567756c61746f72 // "regulator"
+bytec 5 // ""
+app_global_put
+bytec_1 // "emission_parameter"
+bytec 5 // ""
+app_global_put
+bytec_2 // "emission_max"
+intc_0 // 0
+app_global_put
+bytec_3 // "emission_min"
+intc_0 // 0
+app_global_put
+retsub
+
+// auth_only
+authonly_1:
+global CreatorAddress
+==
+retsub
+
+// update
+update_2:
+txn Sender
+callsub authonly_1
+// unauthorized
+assert
+intc_1 // 1
+return
+
+// opt_in
+optin_3:
+intc_1 // 1
+return
+
+// get_emission_rule
+getemissionrule_4:
+bytec_2 // "emission_max"
+app_global_get
+store 1
+bytec_3 // "emission_min"
+app_global_get
+store 2
+bytec_1 // "emission_parameter"
+app_global_get
+store 3
+load 3
+len
+itob
+extract 6 0
+load 3
+concat
+store 3
+load 3
+store 4
+pushint 18 // 18
+itob
+extract 6 0
+load 1
+itob
+concat
+load 2
+itob
+concat
+load 4
+concat
+retsub
+
+// set_emission_rule
+setemissionrule_5:
+store 11
+store 10
+store 9
+bytec_1 // "emission_parameter"
+load 9
+extract 2 0
+app_global_put
+bytec_2 // "emission_max"
+load 10
+app_global_put
+bytec_3 // "emission_min"
+load 11
+app_global_put
+intc_1 // 1
+retsub
+
+// is_business_compliant
+isbusinesscompliant_6:
+store 16
+store 15
+bytec_1 // "emission_parameter"
+app_global_get
+load 15
+extract 2 0
+==
+// Emission Parameter given is not correct for the app being used!
+assert
+load 16
+bytec_3 // "emission_min"
+app_global_get
+>=
+// Emission value is lesser than min configured
+assert
+load 16
+bytec_2 // "emission_max"
+app_global_get
+<=
+bnz isbusinesscompliant_6_l2
+intc_0 // 0
+store 17
+b isbusinesscompliant_6_l3
+isbusinesscompliant_6_l2:
+intc_1 // 1
+store 17
+isbusinesscompliant_6_l3:
+load 17
+retsub
+
+// create_compliance_nft_internal
+createcompliancenftinternal_7:
+itxn_begin
+intc_0 // 0
+itxn_field Fee
+pushint 3 // acfg
+itxn_field TypeEnum
+intc_1 // 1
+itxn_field ConfigAssetTotal
+intc_0 // 0
+itxn_field ConfigAssetDecimals
+pushbytes 0x434f4d2d415341 // "COM-ASA"
+itxn_field ConfigAssetUnitName
+pushbytes 0x434f4d504c49414e43452d415341 // "COMPLIANCE-ASA"
+itxn_field ConfigAssetName
+pushbytes 0x68747470733a2f2f636f6d706c69616e63652e6170702f // "https://compliance.app/"
+itxn_field ConfigAssetURL
+global CurrentApplicationAddress
+itxn_field ConfigAssetManager
+global CurrentApplicationAddress
+itxn_field ConfigAssetReserve
+global CurrentApplicationAddress
+itxn_field ConfigAssetFreeze
+global CurrentApplicationAddress
+itxn_field ConfigAssetClawback
+itxn_submit
+itxn CreatedAssetID
+retsub
+
+// app_opt_into_asset
+appoptintoasset_8:
+store 24
+itxn_begin
+intc_0 // 0
+itxn_field Fee
+intc_2 // axfer
+itxn_field TypeEnum
+load 24
+itxn_field XferAsset
+intc_1 // 1
+itxn_field AssetAmount
+global CurrentApplicationAddress
+itxn_field Sender
+global CurrentApplicationAddress
+itxn_field AssetReceiver
+itxn_submit
+retsub
+
+// transfer_compliance_nft_to_business
+transfercompliancenfttobusiness_9:
+store 26
+store 25
+itxn_begin
+intc_0 // 0
+itxn_field Fee
+intc_2 // axfer
+itxn_field TypeEnum
+load 26
+itxn_field XferAsset
+intc_1 // 1
+itxn_field AssetAmount
+global CurrentApplicationAddress
+itxn_field Sender
+load 25
+itxn_field AssetReceiver
+itxn_submit
+retsub
+
+// create_compliance_nft
+createcompliancenft_10:
+callsub createcompliancenftinternal_7
+store 19
+load 19
+callsub appoptintoasset_8
+load 19
+retsub
+
+// allocate_compliance_nft_to_business
+allocatecompliancenfttobusiness_11:
+store 23
+load 23
+callsub transfercompliancenfttobusiness_9
+load 23
+retsub

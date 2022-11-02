@@ -1,0 +1,78 @@
+{
+    "name": "EmissionControl",
+    "methods": [
+        {
+            "name": "get_emission_rule",
+            "args": [],
+            "returns": {
+                "type": "(string,uint64,uint64)"
+            },
+            "desc": "Returns the rules defined by the regulator for the given emission SC"
+        },
+        {
+            "name": "set_emission_rule",
+            "args": [
+                {
+                    "type": "string",
+                    "name": "emission_parameter"
+                },
+                {
+                    "type": "uint64",
+                    "name": "emission_max"
+                },
+                {
+                    "type": "uint64",
+                    "name": "emission_min"
+                }
+            ],
+            "returns": {
+                "type": "bool"
+            },
+            "desc": "Sets the rules defined by the regulator for the given emission"
+        },
+        {
+            "name": "is_business_compliant",
+            "args": [
+                {
+                    "type": "string",
+                    "name": "emission_parameter"
+                },
+                {
+                    "type": "uint64",
+                    "name": "emission_value"
+                }
+            ],
+            "returns": {
+                "type": "bool"
+            },
+            "desc": "Returns true/false based on whether the business is compliant to the emissions value or not"
+        },
+        {
+            "name": "create_compliance_nft",
+            "args": [],
+            "returns": {
+                "type": "uint64"
+            },
+            "desc": "Creates the compliance NFT for the business via the Algorand SC"
+        },
+        {
+            "name": "allocate_compliance_nft_to_business",
+            "args": [
+                {
+                    "type": "address",
+                    "name": "business_address"
+                },
+                {
+                    "type": "uint64",
+                    "name": "asset_id"
+                }
+            ],
+            "returns": {
+                "type": "uint64"
+            },
+            "desc": "Creates the compliance NFT for the business via the Algorand SC"
+        }
+    ],
+    "networks": {},
+    "desc": "\n    Emission Control(aka Smart Contract App) for storing business' compliance analysis on chain\n    and creating/minting NFTs for businesses based on the rules defined by the regulators.\n    "
+}
