@@ -53,15 +53,16 @@ python3 emission_control_client.py
 3. Run through the command line demo app to interact with the emission control App deployed on the algorand blockchain
 
 ## Demo
-Please find the demo here: <demo_video>
+[DEMO VIDEO IS AVAILABLE HERE](https://youtu.be/v4iyuRsXeec)
 
-## Sample Run of the application opn Algorand testnet:
+
+## Sample Run of the application on Algorand testnet:
 Notes:
 1. All the following info is available on the algorand testnet exploer
 2. Business1 Account used: `SZ3K22H6MZ3A3ORYIVTAYMQMMBWVFOMJWXR3QCODNMJBQRIKBXN5PXX6AI`
 3. Regulator Account used: `2RYRFNXY66QK7TSYNGODPBOYCALJNOPRHVDCDQNQ57BUBS2TBJH3H2QBJQ`
 
-Step 1:
+### Step 1:
 ```
 --- Starting Emission Control App Interaction with the python client ---
 --- See .emission_control file for verbose details ---
@@ -84,7 +85,7 @@ Current app state:{'emission_max': 0, 'emission_min': 0, 'emission_parameter': '
 ```
 This step creates the compliance app with id: 120292561 and aty address: JPH3TKASKTUQHXVJSWFXF2NR3Z7QYGSFMEXUTI2Q5Y6UJZS3T6MNJDT2MQ
 
-Step 2:
+### Step 2:
 ```
 --- CHOOSE FROM THE MENU OPTION BELOW ---
 1. Create an Emission Control for Carbon Dioxide (max emission: 100)
@@ -102,7 +103,7 @@ Current app state:{'emission_max': 0, 'emission_min': 0, 'emission_parameter': '
 ```
 The Current app state after creation is set to default.
 
-Step 3:
+### Step 3:
 ```
 --- CHOOSE FROM THE MENU OPTION BELOW ---
 1. Create an Emission Control for Carbon Dioxide (max emission: 100)
@@ -123,7 +124,7 @@ TXN: Z35RNNLQOBHKEIAZTN3Z52RFFWZNCIB7GW4JLWHEXCM3BWYYJO6Q, RESULT: b'\x80', RETU
 Result Txn: Z35RNNLQOBHKEIAZTN3Z52RFFWZNCIB7GW4JLWHEXCM3BWYYJO6Q
 The current state of the app should now be set to {'emission_max': 200, 'emission_parameter': 'CO2:Carbon Dioxide Emission', 'regulator': '', 'emission_min': 0} (See step 4 below)
 
-Step 4:
+### Step 4:
 ```
 --- CHOOSE FROM THE MENU OPTION BELOW ---
 1. Create an Emission Control for Carbon Dioxide (max emission: 100)
@@ -141,7 +142,7 @@ Current app state:{'emission_max': 200, 'emission_parameter': 'CO2:Carbon Dioxid
 ```
 Result: New app state now is {'emission_max': 200, 'emission_parameter': 'CO2:Carbon Dioxide Emission', 'regulator': '', 'emission_min': 0}
 
-Step 5:
+### Step 5:
 ```
 --- CHOOSE FROM THE MENU OPTION BELOW ---
 1. Create an Emission Control for Carbon Dioxide (max emission: 100)
@@ -161,7 +162,7 @@ TXN: ZXAT2WV2QEV6VZN2DCX73WCGF52U4WK3SCBNWYXXO5AYQVCXE63Q, RESULT: b'\x80', RETU
 ```
 Result: `Business1` is NOW COMPLIANT with the emission control created in step 1. Txn: ZXAT2WV2QEV6VZN2DCX73WCGF52U4WK3SCBNWYXXO5AYQVCXE63Q
 
-Step 6:
+### Step 6:
 ```
 --- CHOOSE FROM THE MENU OPTION BELOW ---
 1. Create an Emission Control for Carbon Dioxide (max emission: 100)
@@ -181,7 +182,7 @@ TXN: VIDMKTTU45XWKM6TW7PGT3HFR2DSIC4F7GIR5IKG2LK4LMHU7OWQ, RESULT: b'\x00', RETU
 ```
 Result: `Business2` is NOW COMPLIANT with the emission control created in step 1. Txn: VIDMKTTU45XWKM6TW7PGT3HFR2DSIC4F7GIR5IKG2LK4LMHU7OWQ
 
-Step 7:
+### Step 7:
 ```
 --- CHOOSE FROM THE MENU OPTION BELOW ---
 1. Create an Emission Control for Carbon Dioxide (max emission: 100)
@@ -201,7 +202,7 @@ TXN: GDXAYZIKG7KMM733JMIHJA33KOZR54QT3NRCDQ7KJUECND2NKYMA, RESULT: b'\x00\x00\x0
 ```
 Result: Smart ASA created with asset id: 120292832 and Txn: GDXAYZIKG7KMM733JMIHJA33KOZR54QT3NRCDQ7KJUECND2NKYMA
 
-Step 8:
+### Step 8:
 ```
 --- CHOOSE FROM THE MENU OPTION BELOW ---
 1. Create an Emission Control for Carbon Dioxide (max emission: 100)
@@ -222,7 +223,7 @@ Result confirmed in round: 25260587
 Result: Business1 signs the OPT-IN transaction for the compliance NFT. Txn:  A5PNDQB64YCRIKHAO5X5B7DPWRTUIUUZD6RTUCSEJ6TAP2XZFUWA
 
 
-Step 9:
+### Step 9:
 ```
 --- CHOOSE FROM THE MENU OPTION BELOW ---
 1. Create an Emission Control for Carbon Dioxide (max emission: 100)
@@ -242,7 +243,7 @@ TXN: GUJILCJOTKIPBHRQOV3SN4E3FPKH73LLM2AECSEUN3JMP547XZSQ, RESULT: b'\x00\x00\x0
 ```
 Result: The Compliance NFT (asset id: 120292832) is now transferred to Business1 with Txn: GUJILCJOTKIPBHRQOV3SN4E3FPKH73LLM2AECSEUN3JMP547XZSQ
 
-Step 10:
+### Step 10:
 ```
 --- CHOOSE FROM THE MENU OPTION BELOW ---
 1. Create an Emission Control for Carbon Dioxide (max emission: 100)
