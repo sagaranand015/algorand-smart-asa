@@ -1,15 +1,34 @@
 import json
+import os
 from algosdk.mnemonic import *
 from algosdk.future import transaction
+from algosdk.future.transaction import *
+from algosdk.future.transaction import (
+    AssetConfigTxn,
+    AssetTransferTxn,
+    AssetFreezeTxn,
+)
 from algosdk.atomic_transaction_composer import *
 from algosdk.logic import get_application_address
-from utils.constants import ALGOD_HOST, ALGOD_TOKEN, APP_ACCOUNT_MNEMONIC
+from utils.constants import (
+    ALGOD_HOST,
+    ALGOD_TOKEN,
+    APP_ACCOUNT_MNEMONIC,
+    EMISSION_CONTROL_FILE,
+    EMISSION_CONTROL_ASSET_FILE,
+    BUSINESS1_ACCOUNT_MNEMONIC,
+)
 from beaker import *
 from contracts.emission_control import EmissionControl
+from pathlib import Path
 
 ACCOUNT_ADDRESS = to_public_key(APP_ACCOUNT_MNEMONIC)
 ACCOUNT_SECRET = to_private_key(APP_ACCOUNT_MNEMONIC)
 ACCOUNT_SIGNER = AccountTransactionSigner(ACCOUNT_SECRET)
+
+BUSINESS1_ACCOUNT_ADDRESS = to_public_key(BUSINESS1_ACCOUNT_MNEMONIC)
+BUSINESS1_ACCOUNT_SECRET = to_private_key(BUSINESS1_ACCOUNT_MNEMONIC)
+BUSINESS1_ACCOUNT_SIGNER = AccountTransactionSigner(BUSINESS1_ACCOUNT_SECRET)
 
 WAIT_DELAY = 11
 
@@ -37,10 +56,17 @@ class EmissionControlClient:
         algod_client = algod.AlgodClient(ALGOD_TOKEN, ALGOD_HOST)
         return algod_client
 
+    def print_txn(self, txn):
+        print("=============== BLOCKCHAIN INTERACTION RESULT ===============")
+        print(
+            f"TXN: {txn.tx_id}, RESULT: {txn.raw_value}, RETURN_VAL: {txn.return_value}"
+        )
+        print("=============== BLOCKCHAIN INTERACTION RESULT ===============")
+
     def get_algo_app_client(self, app_id: int):
         app_client = client.ApplicationClient(
             self._algo_client,
-            ComplianceContract(),
+            EmissionControl(),
             signer=ACCOUNT_SIGNER,
             app_id=self._app_id,
         )
@@ -71,11 +97,6 @@ class EmissionControlClient:
         )
 
     def get_application_state(self):
-        app_state = self._algo_client.dele
-        print(f"Current app state:{app_state}")
-        return app_state
-
-    def get_application_state(self):
         app_state = self._algo_app.get_application_state()
         print(f"Current app state:{app_state}")
         return app_state
@@ -91,14 +112,10 @@ class EmissionControlClient:
         sp.fee = 2000  # cover this and 1 inner transaction
 
         res = self._algo_app.call(
-            ComplianceContract.get_emission_rule,
+            EmissionControl.get_emission_rule,
             suggested_params=sp,
         )
-        print("======== res is: ", res)
-        print("======== res.return_value is: ", res.return_value)
-        print("======== res.raw_value is: ", res.raw_value)
-        print("======== res.tx_id is: ", res.tx_id)
-        print("======== res.tx_value is: ", res.tx_info)
+        self.print_txn(res)
         return res
 
     def set_emissions_rule(self, emission_param: str, emission_max: int):
@@ -107,38 +124,30 @@ class EmissionControlClient:
         sp.fee = 2000  # cover this and 1 inner transaction
 
         res = self._algo_app.call(
-            ComplianceContract.set_emission_rule,
+            EmissionControl.set_emission_rule,
             emission_parameter=emission_param,
             emission_max=emission_max,
             emission_min=0,
             suggested_params=sp,
         )
-        print("======== res is: ", res)
-        print("======== res.return_value is: ", res.return_value)
-        print("======== res.raw_value is: ", res.raw_value)
-        print("======== res.tx_id is: ", res.tx_id)
-        print("======== res.tx_value is: ", res.tx_info)
+        self.print_txn(res)
         return res
 
-    def is_business_compliant(self, emission_param: str, emission_val: str):
+    def is_business_compliant(self, emission_param: str, emission_val: int):
         sp = self._algo_client.suggested_params()
         sp.flat_fee = True
         sp.fee = 2000  # cover this and 1 inner transaction
 
         res = self._algo_app.call(
-            ComplianceContract.is_business_compliant,
+            EmissionControl.is_business_compliant,
             emission_parameter=emission_param,
-            emission_value=int(emission_val),
+            emission_value=emission_val,
             suggested_params=sp,
         )
-        print("======== res is: ", res)
-        print("======== res.return_value is: ", res.return_value)
-        print("======== res.raw_value is: ", res.raw_value)
-        print("======== res.tx_id is: ", res.tx_id)
-        print("======== res.tx_value is: ", res.tx_info)
+        self.print_txn(res)
         return res
 
-    def create_compliance_token(self, business_address: str):
+    def create_compliance_token(self):
         """
         This functions mints the compliance NFT with the business address as the owner of the NFT,
         for being in compliance with the emission control set by the regulator
@@ -148,17 +157,55 @@ class EmissionControlClient:
         sp.fee = 5000  # cover this and 1 inner transaction
 
         res = self._algo_app.call(
-            ComplianceContract.create_compliance_nft,
-            business_address=business_address,
+            EmissionControl.create_compliance_nft,
             suggested_params=sp,
-            accounts=[business_address],
         )
-        print("======== res is: ", res)
-        print("======== res.return_value is: ", res.return_value)
-        print("======== res.raw_value is: ", res.raw_value)
-        print("======== res.tx_id is: ", res.tx_id)
-        print("======== res.tx_value is: ", res.tx_info)
+        self.print_txn(res)
         return res
+
+    def opt_into_compliance_nft(self, business_address: str, asset_id: int):
+        """
+        This function calls the opt_in method of the app to opt the business into the token!
+        :param asset_id:
+        :return:
+        """
+        sp = self._algo_client.suggested_params()
+        sp.flat_fee = True
+        sp.fee = 5000  # cover this and 1 inner transaction
+
+        txn = AssetTransferTxn(
+            sender=business_address,
+            sp=sp,
+            receiver=business_address,
+            amt=0,
+            index=asset_id,
+        )
+        stxn = txn.sign(BUSINESS1_ACCOUNT_SECRET)
+        # Send the transaction to the network and retrieve the txid.
+        try:
+            txid = self._algo_client.send_transaction(stxn)
+            print("Signed transaction with txID: {}".format(txid))
+            # Wait for the transaction to be confirmed
+            confirmed_txn = wait_for_confirmation(self._algo_client, txid, 4)
+            print("TXID: ", txid)
+            print(
+                "Result confirmed in round: {}".format(
+                    confirmed_txn["confirmed-round"]
+                )
+            )
+        except Exception as err:
+            print(err)
+
+        # res = self._algo_app.call(
+        #     EmissionControl.business_opt_into_asset,
+        #     business_address=business_address,
+        #     asset_id=asset_id,
+        #     suggested_params=sp,
+        #     accounts=[business_address],
+        #     foreign_assets=[asset_id],
+        # )
+        # self.print_txn(res)
+        # return res
 
     def transfer_compliance_token_to_business(
         self, business_address: str, asset_id: int
@@ -172,60 +219,14 @@ class EmissionControlClient:
         sp.fee = 5000  # cover this and 1 inner transaction
 
         res = self._algo_app.call(
-            ComplianceContract.allocate_compliance_nft_to_business,
+            EmissionControl.allocate_compliance_nft_to_business,
             business_address=business_address,
             asset_id=asset_id,
             suggested_params=sp,
             accounts=[business_address],
             foreign_assets=[asset_id],
         )
-        print("======== res is: ", res)
-        print("======== res.return_value is: ", res.return_value)
-        print("======== res.raw_value is: ", res.raw_value)
-        print("======== res.tx_id is: ", res.tx_id)
-        print("======== res.tx_value is: ", res.tx_info)
-        return res
-
-    def create_reward_tokens_supply(self):
-        sp = self._algo_client.suggested_params()
-        sp.flat_fee = True
-        sp.fee = 5000  # cover this and 1 inner transaction
-
-        res = self._algo_app.call(
-            ComplianceContract.create_reward_token_supply,
-            suggested_params=sp,
-        )
-        print("======== res is: ", res)
-        print("======== res.return_value is: ", res.return_value)
-        print("======== res.raw_value is: ", res.raw_value)
-        print("======== res.tx_id is: ", res.tx_id)
-        print("======== res.tx_value is: ", res.tx_info)
-        return res
-
-    def transfer_reward_token_to_business(
-        self, business_address: str, asset_id: int
-    ):
-        """
-        This functions mints the compliance NFT with the business address as the owner of the NFT,
-        for being in compliance with the emission control set by the regulator
-        """
-        sp = self._algo_client.suggested_params()
-        sp.flat_fee = True
-        sp.fee = 5000  # cover this and 1 inner transaction
-
-        res = self._algo_app.call(
-            ComplianceContract.allocate_reward_token_to_business,
-            business_address=business_address,
-            asset_id=asset_id,
-            suggested_params=sp,
-            accounts=[business_address],
-            foreign_assets=[asset_id],
-        )
-        print("======== res is: ", res)
-        print("======== res.return_value is: ", res.return_value)
-        print("======== res.raw_value is: ", res.raw_value)
-        print("======== res.tx_id is: ", res.tx_id)
-        print("======== res.tx_value is: ", res.tx_info)
+        self.print_txn(res)
         return res
 
     #   Utility function used to print asset holding for account and assetid
@@ -251,55 +252,134 @@ class EmissionControlClient:
                 break
 
 
+def print_menu():
+    print("--- CHOOSE FROM THE MENU OPTION BELOW ---")
+    print(
+        "1. Create an Emission Control for Carbon Dioxide (max emission: 100)"
+    )
+    print("2. Show the Emission Control Values configured for the app")
+    print("3. Update the Carbon Dioxide Emission Control value to 200")
+    print(
+        "4. Check if Business1 is compliant with Carbon Dioxide Emission Control (emission value for Business1 is: 90)"
+    )
+    print(
+        "5. Check if Business2 is compliant with Carbon Dioxide Emission Control (emission value for Business2 is: 220)"
+    )
+    print("6. Create a Compliance NFT")
+    print("7. Make Business1 Opt into the Compliance NFT")
+    print("8. Transfer Compliance NFT to Business1")
+    print("0. Press 0 to Exit")
+
+
+def update_app_id_in_storage(app_id):
+    with open(EMISSION_CONTROL_FILE, "w") as fp:
+        fp.write(str(app_id))
+
+
+def get_app_id_in_storage() -> int:
+    try:
+        with open(EMISSION_CONTROL_FILE, "r") as fp:
+            app_id = fp.read()
+        return int(app_id)
+    except Exception:
+        return 0
+
+
+def update_asset_id_in_storage(asset_id):
+    with open(EMISSION_CONTROL_ASSET_FILE, "w") as fp:
+        fp.write(str(asset_id))
+
+
+def get_asset_id_in_storage() -> int:
+    try:
+        with open(EMISSION_CONTROL_ASSET_FILE, "r") as fp:
+            asset_id = fp.read()
+        return int(asset_id)
+    except Exception:
+        return 0
+
+
 if __name__ == "__main__":
-    print("Starting deploy of the Compliance App(SC) on Algorand...")
-    # appId:120027745
-    c = ComplianceClient(120076235)
-    c.get_application_state()
-    c.get_application_address()
-    c.get_emissions_rule()
-    print("================ CHANGE =====================")
-    # c.set_emissions_rule()
-    # print("================ CHANGE =====================")
-    # c.get_emissions_rule()
-    # print("================ CHANGE =====================")
-    # try:
-    #     c.is_business_compliant()
-    # except Exception as e:
-    #     print("============ EXCEPTION: ", e)
-    #
-    # try:
-    #     c.create_compliance_token("SZ3K22H6MZ3A3ORYIVTAYMQMMBWVFOMJWXR3QCODNMJBQRIKBXN5PXX6AI")
-    # except Exception as e:
-    #     print("========= EXCEPTION IN CREATING COMPLIANCE NFT...", e)
-    #     import traceback
-    #     traceback.print_exc()
+    print(
+        "--- Starting Emission Control App Interaction with the python client ---"
+    )
+    print("--- See .emission_control file for verbose details ---")
 
-    # try:
-    #     c.transfer_compliance_token_to_business("SZ3K22H6MZ3A3ORYIVTAYMQMMBWVFOMJWXR3QCODNMJBQRIKBXN5PXX6AI", 120023374)
-    # except Exception as e:
-    #     print("========= EXCEPTION IN TRANSFERRING TO BUSINESS...", e)
-    #     import traceback
-    #     traceback.print_exc()
+    app_data = {}
+    _client = None
+    # Create the file before starting the process
+    em_ctrl_file = Path(EMISSION_CONTROL_FILE)
+    if not em_ctrl_file.exists():
+        with open(EMISSION_CONTROL_FILE, "w") as fp:
+            pass
 
-    # try:
-    #     c.print_asset_holding("SZ3K22H6MZ3A3ORYIVTAYMQMMBWVFOMJWXR3QCODNMJBQRIKBXN5PXX6AI", 120019312)
-    # except Exception as e:
-    #     print("========= EXCEPTION IN GETTING ACCOUNT INFO...", e)
-    #     import traceback
-    #     traceback.print_exc()
+    em_ctrl_asset_file = Path(EMISSION_CONTROL_ASSET_FILE)
+    if not em_ctrl_asset_file.exists():
+        with open(EMISSION_CONTROL_ASSET_FILE, "w") as fp:
+            pass
 
-    # """
-    # Reward Token interactions below!
-    # """
-    # # c.create_reward_tokens_supply()
-    # try:
-    #     c.transfer_reward_token_to_business(
-    #         "C25IIJNW7VRRPNPEBKNBU2TR4SGIIH22EGYGE6FWXLGOV4GDQMN5VGTWB4",
-    #         120027897,
-    #     )
-    # except Exception as e:
-    #     print("========= EXCEPTION IN TRANSFERRING TO BUSINESS...", e)
-    #     import traceback
-    #
-    #     traceback.print_exc()
+    app_id = get_app_id_in_storage()
+    asset_id = get_asset_id_in_storage()
+    loop_break = False
+    while True:
+        if loop_break:
+            break
+
+        print_menu()
+        try:
+            input_val = input("\n--- INPUT YOUR CHOICE: ")
+            if int(input_val) == 0:
+                print("--- BYE. THANK YOU!")
+                break
+            elif int(input_val) == 1:
+                _client = EmissionControlClient(app_id)
+                update_app_id_in_storage(_client.get_app_id())
+                _client.get_application_state()
+                continue
+            elif int(input_val) == 2:
+                _client = EmissionControlClient(get_app_id_in_storage())
+                _client.get_application_state()
+                continue
+            elif int(input_val) == 3:
+                _client = EmissionControlClient(get_app_id_in_storage())
+                _client.set_emissions_rule("CO2:Carbon Dioxide Emission", 200)
+                continue
+            elif int(input_val) == 4:
+                _client = EmissionControlClient(get_app_id_in_storage())
+                _client.is_business_compliant(
+                    "CO2:Carbon Dioxide Emission", 90
+                )
+                continue
+            elif int(input_val) == 5:
+                _client = EmissionControlClient(get_app_id_in_storage())
+                _client.is_business_compliant(
+                    "CO2:Carbon Dioxide Emission", 220
+                )
+                continue
+            elif int(input_val) == 6:
+                _client = EmissionControlClient(get_app_id_in_storage())
+                res = _client.create_compliance_token()
+                update_asset_id_in_storage(res.return_value)
+                continue
+            elif int(input_val) == 7:
+                _client = EmissionControlClient(get_app_id_in_storage())
+                _client.opt_into_compliance_nft(
+                    BUSINESS1_ACCOUNT_ADDRESS, get_asset_id_in_storage()
+                )
+                # update_asset_id_in_storage(res.return_value)
+                continue
+            elif int(input_val) == 8:
+                _client = EmissionControlClient(get_app_id_in_storage())
+                res = _client.transfer_compliance_token_to_business(
+                    BUSINESS1_ACCOUNT_ADDRESS, get_asset_id_in_storage()
+                )
+                # update_asset_id_in_storage(res.return_value)
+                continue
+
+        except Exception:
+            import traceback
+
+            traceback.print_exc()
+            print("--- INVALID INPUT. TRY AGAIN...")
+            break
+            # continue

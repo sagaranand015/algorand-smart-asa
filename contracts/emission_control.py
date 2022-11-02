@@ -1,5 +1,5 @@
 from typing import Final
-from constants import COMPLIANCE_NFT_BASE_URL
+from .constants import COMPLIANCE_NFT_BASE_URL
 
 from pyteal import *
 from beaker import *
@@ -143,7 +143,9 @@ class EmissionControl(Application):
         )
 
     @internal(TealType.none)
-    def opt_into_asset_for_business(self, business_address: Expr, asset_id: Expr):
+    def opt_into_asset_for_business(
+        self, business_address: Expr, asset_id: Expr
+    ):
         return Seq(
             InnerTxnBuilder.Begin(),
             InnerTxnBuilder.SetFields(
@@ -164,6 +166,7 @@ class EmissionControl(Application):
     def transfer_compliance_nft_to_business(
         self, business_address: Expr, asset_id: Expr
     ):
+        # TODO: Add the check for business' emission control before actually transferring the token!
         return Seq(
             InnerTxnBuilder.Begin(),
             InnerTxnBuilder.SetFields(
@@ -181,9 +184,7 @@ class EmissionControl(Application):
         )
 
     @external
-    def create_compliance_nft(
-        self, *, output: abi.Uint64
-    ):
+    def create_compliance_nft(self, *, output: abi.Uint64):
         """
         Creates the compliance NFT for the business via the Algorand SC
         """
@@ -215,11 +216,11 @@ class EmissionControl(Application):
 
     @external
     def business_opt_into_asset(
-            self,
-            business_address: abi.Address,
-            asset_id: abi.Uint64,
-            *,
-            output: abi.Uint64,
+        self,
+        business_address: abi.Address,
+        asset_id: abi.Uint64,
+        *,
+        output: abi.Uint64,
     ):
         """
         Business Account opting into the Compliance NFT
